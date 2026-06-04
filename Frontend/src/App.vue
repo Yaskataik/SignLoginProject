@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import api from './api'
 
-// Toggle state: true = Sign In, false = Sign Up
+
 const isSignIn = ref(true)
 
 // Form fields
@@ -14,7 +14,7 @@ const username = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
 
-// [CHANGE]: Added a helper to clear form fields
+
 const resetForm = () => {
   username.value = ''
   email.value = ''
@@ -33,7 +33,7 @@ const handleSubmit = async () => {
         password: password.value
       })
       
-      // [CHANGE]: Clear data, set success message, and auto-clear it
+      
       resetForm()
       successMessage.value = 'Login successful! Redirecting...'
       setTimeout(() => { successMessage.value = '' }, 3000)
@@ -48,7 +48,7 @@ const handleSubmit = async () => {
         password: password.value
       })
       
-      // [CHANGE]: Clear data, set success message, and auto-clear it
+      
       resetForm()
       successMessage.value = 'Registration successful! You can now sign in.'
       setTimeout(() => { successMessage.value = '' }, 3000)
