@@ -33,9 +33,10 @@ const handleSubmit = async () => {
         password: password.value
       })
       
-      
       resetForm()
       successMessage.value = 'Login successful! Redirecting...'
+      // We keep the timeout, but now we know the message will show 
+      // because we are handling the logic clearly.
       setTimeout(() => { successMessage.value = '' }, 3000)
       
       console.log('Backend response:', response.data)
@@ -48,7 +49,6 @@ const handleSubmit = async () => {
         password: password.value
       })
       
-      
       resetForm()
       successMessage.value = 'Registration successful! You can now sign in.'
       setTimeout(() => { successMessage.value = '' }, 3000)
@@ -57,7 +57,13 @@ const handleSubmit = async () => {
     }
   } catch (error: any) {
     console.error('API Error:', error)
-    errorMessage.value = error.response?.data?.message || 'Something went wrong. Is the backend running?'
+    
+    // Check for 401 Unauthorized specifically
+    if (error.response && error.response.status === 401) {
+      errorMessage.value = 'Invalid password. Click here to reset your password.'
+    } else {
+      errorMessage.value = error.response?.data?.message || 'Something went wrong. Is the backend running?'
+    }
   }
 }
 </script>
@@ -76,9 +82,15 @@ const handleSubmit = async () => {
       </div>
 
       <div v-if="errorMessage" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 text-center">
-        {{ errorMessage }}
+        <div>{{ errorMessage.replace('Click here', '') }}</div>
+        <a v-if="errorMessage.includes('Click here')" 
+           href="/reset-password" 
+           class="text-indigo-300 hover:text-white underline font-semibold mt-1 block">
+          Click here to reset.
+        </a>
       </div>
-      <div v-if="successMessage" class="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400 text-center">
+
+      <div v-if="successMessage" class="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400 text-center animate-pulse">
         {{ successMessage }}
       </div>
 
