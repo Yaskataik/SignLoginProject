@@ -54,3 +54,26 @@ def login_view(request):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def reset_password_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            new_password = data.get('new_password')
+            
+            # Find the user by email
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return JsonResponse({'message': 'User with this email not found.'}, status=404)
+            
+            # Set and save the new password securely
+            user.set_password(new_password)
+            user.save()
+            
+            return JsonResponse({'message': 'Password successfully reset!'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Method not allowed.'}, status=405)
