@@ -53,14 +53,23 @@ const handleSubmit = async () => {
       
       isSignIn.value = true // automatically switch them to login view
     }
-  } catch (error: any) {
+} catch (error: any) {
     console.error('API Error:', error)
     
-    // Check for 401 Unauthorized specifically
-    if (error.response && error.response.status === 401) {
-      errorMessage.value = 'Invalid password. Click here to reset your password.'
+    if (error.response) {
+      
+      if (error.response.status === 401) {
+        errorMessage.value = 'Invalid password. Click here to reset your password.'
+      } 
+
+      else if (error.response.data) {
+        // This takes the object (e.g., {username: [...]}) and turns it into a readable string
+        const errors = error.response.data
+        const firstErrorKey = Object.keys(errors)[0]
+        errorMessage.value = `${firstErrorKey}: ${errors[firstErrorKey][0]}`
+      }
     } else {
-      errorMessage.value = error.response?.data?.message || 'Something went wrong. Is the backend running?'
+      errorMessage.value = 'Something went wrong. Is the backend running?'
     }
   }
 }

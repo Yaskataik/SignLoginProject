@@ -1,79 +1,44 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import UserSerializer
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
 
-@csrf_exempt
-def signup_view(request):
-    if request.method == 'POST':
+# 1. Signup View
+class SignupView(APIView):
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Registration successful!'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 2. Login View
+class LoginView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
         try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            email = data.get('email')
-            password = data.get('password')
-
-            # --- ADD THIS BLOCK ---
-            if User.objects.filter(username=username).exists():
-                return JsonResponse({'error': 'Username already taken.'}, status=400)
-            
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.save()
-            # ----------------------
-            
-            return JsonResponse({'message': 'Registration successful!'}, status=201)
-
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-            
-    return JsonResponse({'error': 'Invalid request method.'}, status=405)
-
-
-@csrf_exempt
-def login_view(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            email = data.get('email')
-            password = data.get('password')
-
-            try:
-                user_obj = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return JsonResponse({'error': 'No user found with this email.'}, status=401)
-            
-            # This is the exact moment of truth
+            user_obj = User.objects.get(email=email)
             user = authenticate(username=user_obj.username, password=password)
-
-            if user is not None:
+            if user:
                 login(request, user)
-                return JsonResponse({'message': 'Login successful!'}, status=200)
-            else:
-                # If we get here, the user was found but the password was wrong
-                return JsonResponse({'error': 'Password does not match.'}, status=401)
+                return Response({'message': 'Login successful!'}, status=status.HTTP_200_OK)
+            return Response({'error': 'Password does not match.'}, status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            return Response({'error': 'No user found with this email.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-@csrf_exempt
-def reset_password_view(request):
-    if request.method == 'POST':
+# 3. Reset Password View
+class ResetPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        new_password = request.data.get('new_password')
         try:
-            data = json.loads(request.body)
-            email = data.get('email')
-            new_password = data.get('new_password')
-            
-            # Find the user by email
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return JsonResponse({'message': 'User with this email not found.'}, status=404)
-            
-            # Set and save the new password securely
+            user = User.objects.get(email=email)
             user.set_password(new_password)
             user.save()
-            
-            return JsonResponse({'message': 'Password successfully reset!'}, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Method not allowed.'}, status=405)
+            return Response({'message': 'Password successfully reset!'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User with this email not found.'}, status=status.HTTP_404_NOT_FOUND)
