@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include  # <-- We added 'include' here
+from django.urls import path, include  
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/auth/', include('authentication.urls')), # <-- We added this bridge line
+    path('api/auth/', include('authentication.urls')), 
 ]

@@ -1,3 +1,7 @@
+import os
+import certifi
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
 """
 Django settings for myproject project.
 
@@ -131,3 +135,30 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',  # Unauthenticated users (login attempts)
+        'user': '60/minute'  # Authenticated users
+    }
+}
+
+# Email Settings
+EMAIL_BACKEND = 'myproject.backends.email_backend.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False  # TLS is for port 587
+EMAIL_USE_SSL = True   # SSL is for port 465
+EMAIL_HOST_USER = os.getenv('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASS')
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USER')
+
+# SSL Bypass for local Windows development
+import ssl
+EMAIL_SSL_CONTEXT = ssl.create_default_context()
+EMAIL_SSL_CONTEXT.check_hostname = False
+EMAIL_SSL_CONTEXT.verify_mode = ssl.CERT_NONE
