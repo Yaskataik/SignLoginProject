@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router' // 1. IMPORT THE ROUTER HERE
 import api from "../api"
-import ResetPassword from './ResetPassword.vue' // Added this import
+import ResetPassword from './ResetPassword.vue' 
+
+const router = useRouter() // 2. INITIALIZE THE ROUTER INSTANCE HERE
 
 const isSignIn = ref(true)
-const showReset = ref(false) // Added this state
+const showReset = ref(false)
 
 // Form fields
 const email = ref('')
@@ -31,9 +34,21 @@ const handleSubmit = async () => {
         email: email.value,
         password: password.value
       })
+      
+      // If your backend returns an auth token, save it here first:
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token)
+      }
+      
       resetForm()
       successMessage.value = 'Login successful! Redirecting...'
-      setTimeout(() => { successMessage.value = '' }, 3000)
+      
+      // 3. REDIRECT THE USER STRAIGHT TO YOUR DASHBOARD HERE
+      setTimeout(() => { 
+        successMessage.value = '' 
+        router.push('/dashboard') 
+      }, 1500) // Changed to 1.5s so the user can see the success message briefly before it switches panels
+      
     } else {
       const response = await api.post('register/', {
         username: username.value,
@@ -49,19 +64,23 @@ const handleSubmit = async () => {
     console.error('API Error:', error)
     
     if (error.response) {
-      // --- NEW SECURITY MITIGATION HANDLING ---
       if (error.response.status === 429) {
         errorMessage.value = "Too many attempts! Please wait a minute before trying again."
       } 
-      // --- EXISTING HANDLING ---
       else if (error.response.status === 401) {
         errorMessage.value = 'Invalid password. Click here to reset your password.'
       } else if (error.response.data) {
-        const errors = error.response.data
-        const firstErrorKey = Object.keys(errors)[0]
-        errorMessage.value = `${firstErrorKey}: ${errors[firstErrorKey][0]}`
+        const serverErrors = error.response.data;
+        const firstErrorKey = Object.keys(serverErrors)[0];
+        const errorVal = serverErrors[firstErrorKey];
+        
+        // If it's a list/array of errors, pull the first one. If it's a flat string, use it directly.
+        errorMessage.value = Array.isArray(errorVal) 
+          ? `${firstErrorKey}: ${errorVal[0]}` 
+          : `${errorVal}`;
       }
-    } else {
+    } 
+    else {
       errorMessage.value = 'Something went wrong. Is the backend running?'
     }
   }

@@ -142,8 +142,9 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '5/minute',  # Unauthenticated users (login attempts)
-        'user': '60/minute'  # Authenticated users
+        'anon': '5/minute',         
+        'user': '60/minute',        
+        'login_email': '5/minute'   # Locks specific email across all IPs
     }
 }
 
